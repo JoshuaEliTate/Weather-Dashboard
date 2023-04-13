@@ -1,20 +1,3 @@
-/**
- * CRITERIA
- */
-
-// GIVEN a weather dashboard with form inputs
-// WHEN I search for a city
-// THEN I am presented with current and future conditions for that city and that city is added to the search history
-// WHEN I view current weather conditions for that city
-// THEN I am presented with the city name, the date, an icon representation of weather conditions, the temperature, the humidity, the wind speed, and the UV index
-// WHEN I view the UV index
-// THEN I am presented with a color that indicates whether the conditions are favorable, moderate, or severe
-// WHEN I view future weather conditions for that city
-// THEN I am presented with a 5-day forecast that displays the date, an icon representation of weather conditions, the temperature, and the humidity
-// WHEN I click on a city in the search history
-// THEN I am again presented with current and future conditions for that city
-// WHEN I open the weather dashboard
-// THEN I am presented with the last searched city forecast
 var cityDetail = document.querySelector('#cityDetail');
 var enterCity = document.querySelector('#enterCity');
 var apiKey = "4c8f1b657ab5e2cea46887cf879a3d5e";
@@ -25,11 +8,14 @@ var searchBtn = document.querySelector('#searchBtn');
 var searchHistory = document.querySelector('#searchHistory');
 var fiveDay = document.querySelector('#fiveDay')
 var uvIndex = document.querySelector('#uvIndex')
+let variable = false
 
-// function for current condition
 function currentCondition(city) {
-
-    // var queryURL = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=imperial&appid=${apiKey}`;
+    if(variable == true){
+        removeOldInfo()
+        cityDetail.lastElementChild.remove()
+        uvIndex.lastElementChild.remove()
+        }
 
     fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=imperial&appid=${apiKey}`, {
         method: "GET"
@@ -78,7 +64,7 @@ function currentCondition(city) {
             uvIndex.append(uvIndexHTML)
 
             futureCondition(lat, lon);
-            cityList()
+            
         });
     });
 }
@@ -91,7 +77,6 @@ function futureCondition(lat, lon) {
         return futureData.json();
     })
         .then(function(futureData) {
-            console.log(futureData)
         for (let i = 1; i < 40;) {
             if(i>30){
                 i+=6
@@ -121,28 +106,22 @@ function futureCondition(lat, lon) {
             `;
             var fiveDayP = document.createElement('p');
             fiveDayP.innerHTML = fiveDayHTML;
+            variable = true
           
             
             fiveDay.append(fiveDayP)
-            // $("#fiveDay").append(futureCard);
         }
     }); 
 }
 
-// add on click event listener 
 searchBtn.addEventListener("click", function(event) {
     event.preventDefault();
-    if(!cityDetail.lastElementChild == null){
-        removeOldInfo()
-        cityDetail.lastElementChild.remove()
-        uvIndex.lastElementChild.remove()
-        }
     var city = enterCity.value.trim();
     currentCondition(city);
     if (!searchHistoryList.includes(city)) {
         searchHistoryList.push(city);
         var searchedCity = `
-            <button class="list-group-item" id="btnEventCheck" onclick="return cityList()">${city}</button>
+            <button class="list-group-item" id="btnEventCheck" onclick="return cityList(${city})">${city}</button>
             `;
 
             var searchedCityHTML = document.createElement('p');
@@ -156,34 +135,10 @@ searchBtn.addEventListener("click", function(event) {
     localStorage.setItem("city", JSON.stringify(searchHistoryList));
 });
 
-function cityList(event) {
-    // event.preventDefault();
-    if(!cityDetail.lastElementChild == null){
-    removeOldInfo()
-    cityDetail.lastElementChild.remove()
-    uvIndex.lastElementChild.remove()
-    }
-    var city = enterCity.value.trim();
-    currentCondition(city);
-    if (!searchHistoryList.includes(city)) {
-        searchHistoryList.push(city);
-        var searchedCity = `
-            <button class="list-group-item" id="btnEventCheck" onclick="return cityList2()">${city}</button>
-            `;
-
-            var searchedCityHTML = document.createElement('p');
-            searchedCityHTML.innerHTML = searchedCity;
-          
-            
-            searchHistory.append(searchedCityHTML)
-
-        // $("#searchHistory").append(searchedCity);
-    };
-    
-    localStorage.setItem("city", JSON.stringify(searchHistoryList));
-
-}
-
+$(document).on("click", ".list-group-item", function() {
+    var listCity = $(this).text();
+    currentCondition(listCity);
+});
 
 $(document).ready(function() {
     var searchHistoryArr = JSON.parse(localStorage.getItem("city"));
@@ -195,13 +150,12 @@ $(document).ready(function() {
         console.log(`Last searched city: ${lastSearchedCity}`);
         var lastSearchedIndex = i;
         var lastSearchedCity = searchHistoryArr[lastSearchedIndex];
-        // currentCondition(lastSearchedCity);
         if (!searchHistoryList.includes(lastSearchedCity)) {
             searchHistoryList.push(lastSearchedCity);
             var searchedCity = `
-                <button class="list-group-item" id="btnEventCheck" onclick="return cityList()">${lastSearchedCity}</button>
+                <button class="list-group-item">${lastSearchedCity}</button>
                 `;
-    
+
                 var searchedCityHTML = document.createElement('p');
                 searchedCityHTML.innerHTML = searchedCity;
               
